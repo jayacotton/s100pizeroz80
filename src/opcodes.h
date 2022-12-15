@@ -6,6 +6,17 @@
    */
 
 /* stock, DD nn,CD nn,FD CB FF nn,ED nn  */ 
+typedef struct OpCodes{
+unsigned int Val;
+char *code1;
+char *code2;
+char *code3;
+char *code4;
+char *code5;
+} OPCODES;
+
+OPCODES OpCodeList[] =
+{
 {0x00 ,"NOP","-","RLC  B","rlc (iy+0)->b","MOS_QUIT"},
 {0x01 ,"LD   BC,&0000","-","RLC  C","rlc (iy+0)->c","MOS_CLI"},
 {0x02 ,"LD   (BC),A","-","RLC  D","rlc (iy+0)->d","MOS_BYTE"},
@@ -262,6 +273,7 @@
 {0xFD ,"**** FD ****","-"," SET  7,L","set 7,(iy+0)->l","[z80]"},
 {0xFE ,"CP   &00","-"," SET  7,(HL)","SET  7,(IY+0)","[z80]"},
 {0xff ,"RST  &38","-","SET  7,A","set 7,(iy+0)->a","ED_DOS"}
+};
 /*
 Notes on index registers
 ------------------------
