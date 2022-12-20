@@ -27,4 +27,3 @@ unsigned char CpuStatus;
 
 unsigned char Ireg;
 unsigned char IntState;
-

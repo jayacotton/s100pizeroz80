@@ -56,7 +56,7 @@
 #define XRDY          0
 #define nVI0          0
 #define nSCLR		0
-#define nVI1         0		 
+#define nVI1         0
 #define nDMA0	0
 #define nVI2          	0
 #define nDMA1	0

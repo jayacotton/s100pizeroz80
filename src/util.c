@@ -8,6 +8,8 @@ without the hardware connected */
 #include "z80sim.h"
 
 int TraceFlag;
+int TraceReg;
+
 extern OPCODES OpCodeList[];
 
 #ifdef LINUX
@@ -18,7 +20,9 @@ FILE *in;
 void LoadBootRom()
 {
     unsigned char *loadpoint;
+if(TraceFlag)
     printf("read and load the boot rom code\n");
+
     loadpoint = &ram[0x100];
     in = fopen("MASTER0.COM", "r");
     if (in == 0) {
@@ -49,8 +53,14 @@ void PrintInstruction(unsigned short addr, int size, int level)
 /* deal with special case instructions */
 	switch (ram[addr]) {
 	case 0xcb:
+	    printf("%04x %02x %02x\t", addr, ram[addr], ram[addr + 1]);
+	    ptr = &OpCodeList[(unsigned int) ram[addr + 1]];
+	    printf("%s\n", ptr->code3);
 	    break;
 	case 0xdd:
+	    printf("%04x %02x %02x\t", addr, ram[addr], ram[addr + 1]);
+	    ptr = &OpCodeList[(unsigned int) ram[addr + 1]];
+	    printf("%s\n", ptr->code2);
 	    break;
 	case 0xed:
 	    printf("%04x %02x %02x\t", addr, ram[addr], ram[addr + 1]);
@@ -63,11 +73,11 @@ void PrintInstruction(unsigned short addr, int size, int level)
 	    switch (size) {
 	    case 1:
 		printf("%04x %02x\t", addr, ram[addr]);
-		printf("%s\n", ptr->code1);
+		printf("\t\t%s\n", ptr->code1);
 		break;
 	    case 2:
 		printf("%04x %02x %02x\t", addr, ram[addr], ram[addr + 1]);
-		printf("%s\t%02x\n", ptr->code1, ram[addr + 1]);
+		printf("\t\t%s\t%02x\n", ptr->code1, ram[addr + 1]);
 		break;
 	    case 3:
 		printf("%04x %02x %02x%02x\t", addr, ram[addr],
@@ -84,4 +94,34 @@ void PrintInstruction(unsigned short addr, int size, int level)
 	    break;
 	}
     }
+}
+
+/* print out all the registers */
+void DumpReg()
+{
+    if (TraceReg) {
+	printf("%04x ", PCAddress);
+	printf("%02x %02x %02x %02x %02x %02x %02x ", Areg, Breg, Creg,
+	       Dreg, Ereg, Hreg, Lreg);
+	printf("%04x\n", StackPointer);
+	printf("     %02x %02x %02x %02x %02x %02x %02x ", Areg_, Breg_,
+	       Creg_, Dreg_, Ereg_, Hreg_, Lreg_);
+	printf("\n%04x %04x %02x %02x\n", IXreg, IYreg, Ireg, IntState);
+
+	if (CpuStatus & SFlag)
+	    printf("S ");
+	if (CpuStatus & ZFlag)
+	    printf("Z ");
+	if (CpuStatus & HFlag)
+	    printf("H ");
+	if (CpuStatus & PFFlag)
+	    printf("PF ");
+	if (CpuStatus & NFlag)
+	    printf("N ");
+	if (CpuStatus & CFlag)
+	    printf("C ");
+
+	printf("\n");
+    }
+
 }
