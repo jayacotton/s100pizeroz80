@@ -1,8 +1,10 @@
 /* debug code */
 #include <stdio.h>
 
+extern unsigned char ReadRAM();
+
+
 #include "opcodes.h"
-extern unsigned char ram[];
 void DumpOpCodes()
 {
     int i;
@@ -28,7 +30,7 @@ void SnapShot(unsigned int addr, int size)
 	    Line = 0;
 	    printf("\n0x%04x ", (unsigned short) addr);
 	}
-	printf("0x%02x ", ram[addr++]);
+	printf("0x%02x ", ReadRAM(addr++));
     }
     printf("\n");
 }

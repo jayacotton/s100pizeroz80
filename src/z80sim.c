@@ -5,6 +5,7 @@
 #include "z80sim.h"
 #include <ctype.h>
 
+extern void s100_init();
 extern int TraceFlag;
 extern int TraceReg;
 extern void PrintInstruction();
@@ -12,32 +13,31 @@ extern void LoadBootRom();
 extern void SnapShot();
 extern void DumpReg();
 extern int parity[];
+extern void WriteRAM();
+extern char ReadRAM();
+extern void WritePort();
+extern char ReadPort();
 
-#define FETCHBYTE(a) {Low = ram[a++];}
-#define FETCHADDR(a) {Low = ram[a++]; High = ram[a++];}
+#define FETCHBYTE(a) {Low = ReadRAM(a++);}
+#define FETCHADDR(a) {Low = ReadRAM(a++); High = ReadRAM(a++);}
 #define TRACE(a,b,c) {PrintInstruction(a,b,c);}
 #define DEC(a,b) {if(b==0x0) a--;b--;}
 #define INC(a,b) {if(b==0xff)a++;b++;}
 
-#ifdef LINUX
-unsigned char ram[1024 * 64];
-#else
-unsigned char *ram;
-#endif
 
 /* push pop code */
 
 void Push(unsigned char hi, unsigned char low)
 {
-    ram[StackPointer - 2] = low;
-    ram[StackPointer - 1] = hi;
+	WriteRAM(StackPointer-2,low);
+	WriteRAM(StackPointer-1,hi);
     StackPointer -= 2;
 }
 
 void Pop(unsigned char *hi, unsigned char *low)
 {
-    *hi = ram[StackPointer + 1];
-    *low = ram[StackPointer];
+    *hi = ReadRAM(StackPointer + 1);
+    *low = ReadRAM(StackPointer);
     StackPointer += 2;
 }
 
@@ -68,7 +68,7 @@ void RunCode()
 
     while (1) {
 	DumpReg();
-	Instruction = ram[PCAddress++];	/* going to need to fix this */
+	Instruction = ReadRAM(PCAddress++);	/* going to need to fix this */
 
 	switch (Instruction) {
 	case 0x0:
@@ -312,8 +312,10 @@ void RunCode()
 	    FETCHADDR(PCAddress);
 	    StackPointer = High << 8 | Low;
 	    break;
-	case 0x32:
-	    BING();
+	case 0x32: /* ld (addr),a */
+		TRACE(PCAddress-1,3,0);
+		FETCHADDR(PCAddress);
+		WriteRAM(High<<8|Low,Areg);
 	    break;
 	case 0x33:
 	    BING();
@@ -340,7 +342,7 @@ void RunCode()
 	case 0x3A:
 	    TRACE(PCAddress - 1, 3, 0);
 	    FETCHADDR(PCAddress);
-	    Areg = ram[High << 8 | Low];
+	    Areg = ReadRAM(High << 8 | Low);
 	    break;
 	case 0x3B:
 	    BING();
@@ -485,7 +487,7 @@ void RunCode()
 	case 0x66:
 		TRACE(PCAddress-1,1,0);
 		addr = Hreg<<8|Lreg;
-		Hreg = ram[addr];
+		Hreg = ReadRAM(addr);
 	    break;
 	case 0x67:
 	    BING();
@@ -539,7 +541,7 @@ void RunCode()
 	case 0x77:
 	    TRACE(PCAddress - 1, 1, 0);
 	    addr = Hreg << 8 | Lreg;
-	    ram[addr] = Areg;
+	    WriteRAM(addr, Areg);
 	    break;
 	case 0x78:
 	    TRACE(PCAddress - 1, 1, 0);
@@ -568,7 +570,7 @@ void RunCode()
 	case 0x7E:
 	    TRACE(PCAddress - 1, 1, 0);
 	    addr = Hreg << 8 | Lreg;
-	    Areg = ram[addr];
+	    Areg = ReadRAM(addr);
 	    break;
 	case 0x7F:
 	    BING();
@@ -778,7 +780,7 @@ void RunCode()
 	case 0xBE:
 	    TRACE(PCAddress - 1, 1, 0);
 	    addr = Hreg << 8 | Lreg;
-	    Compair(Areg, ram[addr]);
+	    Compair(Areg, ReadRAM(addr));
 	    break;
 	case 0xBF:
 	    BING();
@@ -904,24 +906,7 @@ void RunCode()
 	case 0xD3:		/* special case i/o instruction */
 	    TRACE(PCAddress - 1, 2, 0);	/* 2 byte instruction */
 	    FETCHBYTE(PCAddress);
-#ifdef LINUX
-	    //if (TraceFlag) 
-	    {
-		if (Low == 0xa3) {
-#ifdef NEVER
-		    if (isascii(Areg)) {
-			printf("OUT  (%02x) %02x %c\n", Low, Areg, Areg);
-		    } else {
-			printf("OUT  (%02x) %02x\n", Low, Areg);
-		    }
-		} else if (isascii(Areg)) {
-#endif
-		    printf("%c", Areg);
-		}
-	    }
-#else
-	    WriteByte(Low, Areg);
-#endif
+	    WritePort(Low, Areg);
 	    break;
 	case 0xD4:
 	    BING();
@@ -963,25 +948,7 @@ void RunCode()
 	case 0xDB:
 	    TRACE(PCAddress - 1, 2, 0);
 	    FETCHBYTE(PCAddress);
-#ifdef LINUX
-	    if (Low == 0x71)
-		Areg = 0xff;
-	    else if (Low == 0xef)	/*iobyte */
-		Areg = 0xfd;
-	    else if (Low == 0xa1)	/* sio status port */
-		Areg = 0x5;	/* always ready with input, */
-	    /* always ready to output */
-	    else {
-		if (Low == 0xa3){
-		    Areg = getchar();
-		Areg = 'K';
-		}
-		else
-		    Areg = 0xff;
-	    }
-#else
-	    Areg = ReadByte(Low);
-#endif
+	    Areg = ReadPort(Low);
 	    break;
 	case 0xDC:
 	    BING();
@@ -1077,13 +1044,8 @@ void RunCode()
 		addr = Hreg << 8 | Lreg;
 		do {
 		    unsigned char l;
-		    l = ram[addr++];
-#ifdef LINUX
-		    if (0)
-			printf("OUT(%x%x) %x\n", Breg, Creg, l);
-#else
-		    WriteByte(Breg << 8 | Creg, l);
-#endif
+		    l = ReadRAM(addr++);
+		    WritePort(Breg << 8 | Creg, l);
 		} while (--Breg);
 		Hreg = addr >> 8;
 		Lreg = addr & 0xff;
@@ -1181,44 +1143,15 @@ void main(int argc, char *argv[])
     int i;
     unsigned char h, l;
 
-    printf("z80 s100 simulator\n");
-#ifdef NEVER
-    StackPointer = 0xfff0;
-    Push(1, 2);
-    Pop(&h, &l);
-    printf("%d %d\n", h, l);
-    for (i = 1; i < 256; i++) {
-	Push(i, 0);
-    }
-    {
-	for (i = 256; i >= 0; i--) {
-	    Pop(&h, &l);
-	    if (h != i) {
-		printf("error %d %d\n", i, h);
-	    }
-	}
-    }
-    exit(0);
-#endif
-    if (argc == 2) {
-	TraceFlag = 1;		/* trace for now */
-	TraceReg = 0;		/* trace for now */
-    } else if (argc == 3) {
-	TraceFlag = 1;		/* trace for now */
-	TraceReg = 1;
-    } else {
-	TraceFlag = 0;
-	TraceReg = 0;		/* trace for now */
-    }
 /* initialize the s100 bus hardware */
-/* load the boot prom code into ram at 0xe000 and start it.
+	s100_init();
+//	Send_Z80Reset();
+/* load the boot prom code into ReadRAM at 0xe000 and start it.
 of course, on the real hardware we will just start running at 0xe000 since
 the boot prom is located in our address space. */
-#ifdef LINUX
-    LoadBootRom();
-    if (TraceFlag)
-	SnapShot(0xe000, 32);
-#endif
+	LoadBootRom();
     PCAddress = 0xe000;
+//TraceFlag = 1;
+//TraceReg = 1;
     RunCode();
 }
