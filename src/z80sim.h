@@ -1,3 +1,5 @@
+#define RUN_BASE 0xe000
+
 typedef struct OpCodes{
 unsigned int Val;
 char *code1;
@@ -31,6 +33,7 @@ extern unsigned int IXreg;
 extern unsigned int IYreg;
 
 extern unsigned char CpuStatus;
+extern unsigned char CpuStatus_;
 #define SFlag 0x80
 #define ZFlag 0x40
 #define HFlag 0x10

@@ -1,4 +1,5 @@
-CFLAGS = -DLINUX -g -DSTACKTRACE
+CFLAGS = -DLINUX -g  
+;CFLAGS = -DLINUX -g -DSTACKTRACE -DBREAK -DTRACEF 
 CC = gcc
 
 z80sim: z80sim.o util.o reg.o debug.o s100.o

@@ -24,6 +24,7 @@ unsigned int IXreg;
 unsigned int IYreg;
 
 unsigned char CpuStatus;
+unsigned char CpuStatus_;
 
 unsigned char Ireg;
 unsigned char IntState;
