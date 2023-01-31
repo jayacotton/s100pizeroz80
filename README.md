@@ -38,8 +38,8 @@ NOTE: there are a number of compile options for this code.  Many are there for d
 the simulator, some are there to improve performance.  Look at the Makefile for clues.
 
 A note on performance.  In a word, don't expect it to be fast.  As best as I can figure, the simulator
-is running at about 500khz.  This is not the fault of z80core, it is known to run very fast.
-Nor does it seem to be interfaceing with the s100 bus.  Althow I can get a slight increase in
+is running at about 400 instructions per second.  This is not the fault of z80core, it is known to run very fast.
+Nor does it seem to be real slow interfaceing with the s100 bus.  Althow I can get a slight increase in
 speed by using local ram for the program storage.  I have not in fact found the source of
 the speed issues, but I suspect that the Pi Zero is not up to the task.
 
