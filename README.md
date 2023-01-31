@@ -20,7 +20,9 @@ instructions.  This may have some side effects latter on.
 This is still WIP.  It will run the MASTER0 boot prom up to the '->' prompt. 
 
 ```
-To build this code.
+To build this code.  All the building and testing is done directly on the
+Pi Zero platform running Debian/GNU Linux.  
+
 git clone https://github.com/jayacotton/s100pizeroz80.git
 git clone https://github.com/WiringPi/WiringPi.git
 
