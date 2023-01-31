@@ -59,3 +59,6 @@ BogoMIPS:              997.08
 Flags:                 half thumb fastmult vfp edsp java tls
 ```
 The Pi Zero W seems to be about the same speed.
+
+After a bit of schematic searching, I have determind that the V3 dual IDE card will not work with
+this code.  The PAL's seem to be where the problem is .. sequence of bits or timing of signals.
