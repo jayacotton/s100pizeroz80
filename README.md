@@ -56,5 +56,4 @@ CPU min MHz:           700.0000
 BogoMIPS:              997.08
 Flags:                 half thumb fastmult vfp edsp java tls
 ```
-
-
+The Pi Zero W seems to be about the same speed.
