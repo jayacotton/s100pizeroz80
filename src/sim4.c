@@ -657,7 +657,7 @@ static int op_otir(void)		/* OTIR */
 	addr = (H << 8) + L;
 	do {
 		data = memrdr(addr++);
-		WritePort(C,  data);
+		WritePort(B<<8|C,  data);
 		B--;
 		t += 21;
 	} while	(B);

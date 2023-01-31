@@ -413,7 +413,32 @@ void cpu_z80(void)
 		op_cpn,				/* 0xfe */
 		op_rst38			/* 0xff */
 	};
+#ifdef PERFCHECK
+int ins;
+extern int time_diff(struct timeval *, struct timeval *);
+struct timeval t1, t2;
+int tdiff;
+	gettimeofday(&t1, NULL);
+	ins = 0;
+	do{
+		Instruction = ReadRAM(PC);
+		DumpReg();
+		PrintInstruction(PC,1,0);
+		PC++;
+		(*op_sim[Instruction]) (); /* execute next opcode */
+		ins++;
+		if(ins > 300){
+			gettimeofday(&t2, NULL);
+			tdiff = time_diff(&t1, &t2);
+		//	printf("tdiff %d\n",tdiff);
+		//	printf("instructions %d\n",ins);
+			printf("time per Instructions %d microsec\n",(tdiff/ins));
+			ins = 0;
+			gettimeofday(&t1, NULL);
+		}
 
+	} while (1);
+#else
 	do{
 		Instruction = ReadRAM(PC);
 		DumpReg();
@@ -422,7 +447,7 @@ void cpu_z80(void)
 		(*op_sim[Instruction]) (); /* execute next opcode */
 
 	} while (1);
-
+#endif
 }
 
 static int op_nop(void)			/* NOP */
