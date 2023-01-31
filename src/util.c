@@ -6,6 +6,8 @@ without the hardware connected */
 #include <stdio.h>
 #include <stdlib.h>
 #include "z80sim.h"
+#include "sim.h"
+#include "simglb.h"
 int TraceFlag;
 int TraceReg;
 
@@ -18,12 +20,14 @@ extern OPCODES OpCodeList[];
 
 FILE *in;
 
+  unsigned char localram[64 * 1024];
+
 void
 LoadBootRom ()
 {
-  unsigned char localram[64 * 1024];
   unsigned char *loadpoint;
   int i;
+	unsigned char a,b;
 int size;
 
   if (TraceFlag)
@@ -39,7 +43,12 @@ int size;
   size = fread (loadpoint, 1, 1024*64, in);
   for (i = RUN_BASE; i < (size+0x100); i++)
     {
+	a = localram[i];
       WriteRAM (i, localram[i]);
+	b = ReadRAM(i);
+	if(a != b){
+		printf("LoadBootRom:Readback failed %04x %02x %02x\n",i,a,b);
+	}
     }
   fclose (in);
 }
@@ -128,10 +137,10 @@ DumpReg ()
 #endif
 #ifdef STACKTRACE
   int i;
-  if (StackPointer <= 0xff00)
+  if (SP <= 0xff00)
     return;
-  printf ("\n%04x ", StackPointer);
-  for (i = StackPointer; i <= 0xfffe; i++)
+  printf ("\n%04x ", SP);
+  for (i = SP; i <= 0xfffe; i++)
     {
       printf ("%02x ", ReadRAM (i));
     }
@@ -139,25 +148,25 @@ DumpReg ()
 #endif
   if (TraceReg)
     {
-      printf ("%04x ", PCAddress);
-      printf ("%02x %02x %02x %02x %02x %02x %02x ", Areg, Breg, Creg,
-	      Dreg, Ereg, Hreg, Lreg);
-      printf ("%04x\n", StackPointer);
-      printf ("     %02x %02x %02x %02x %02x %02x %02x ", Areg_, Breg_,
-	      Creg_, Dreg_, Ereg_, Hreg_, Lreg_);
-      printf ("\n%04x %04x %02x %02x\n", IXreg, IYreg, Ireg, IntState);
+      printf ("%04x ", PC);
+      printf ("%02x %02x %02x %02x %02x %02x %02x ", A, B, C,
+	      D, E, H, L);
+      printf ("%04x ", SP);
+  //    printf ("     %02x %02x %02x %02x %02x %02x %02x ", A_, B_,
+//	      C_, D_, E_, H_, L_);
+ //     printf ("\n%04x %04x %02x %02x\n", IX, IY, I, IFF);
 
-      if (CpuStatus & SFlag)
+      if (F & S_FLAG)
 	printf ("S ");
-      if (CpuStatus & ZFlag)
+      if (F & Z_FLAG)
 	printf ("Z ");
-      if (CpuStatus & HFlag)
+      if (F & H_FLAG)
 	printf ("H ");
-      if (CpuStatus & PFFlag)
-	printf ("PF ");
-      if (CpuStatus & NFlag)
+      if (F & P_FLAG)
+	printf ("P ");
+      if (F & N_FLAG)
 	printf ("N ");
-      if (CpuStatus & CFlag)
+      if (F & C_FLAG)
 	printf ("C ");
 
       printf ("\n");

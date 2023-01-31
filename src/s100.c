@@ -254,54 +254,60 @@ static int PinAddr3[] = {
 };
 
 unsigned int low, mid, high;
-unsigned long last;
+unsigned int last;
 void SetAddress(unsigned int location)
 {
     int i;
     int k = 0;
 
-//  if (last == location)
-    //   return;
-//  last = location;
-
-
 #ifdef NEVER
+/* possible s100 bus error, if the address does not change between 
+RAM reads it returns junk */
 
-    if (low != (location & 0xff)) {
+//	if(last == location){ /* invalidate the cache */
+//		low = 0x1000;
+//		mid = 0x1000;
+//		high = 0x1000;
+//	}
+//   if (low != (location & 0xff)) {
 	low = location & 0xff;
+//printf("*%02x",low);
 	k = low;
-	for (i = 0; i < 8; i++) {
+	for (i = 0; i <= 7; i++) {
 	    (k & 1) ? digitalWrite(PinAddr1[i],
-				   HIGH) : digitalWrite(PinAddr1[i], LOW);
+		HIGH) : digitalWrite(PinAddr1[i], LOW);
 	    k = k >> 1;
 	}
-    }
 	digitalWrite(ADD_LOW, HIGH);	//Latch low address lines
 	digitalWrite(ADD_LOW, LOW);
-    if (mid != ((location >> 8) & 0xff)) {
+//    }else
+//printf(".%02x",low);
+//    if (mid != ((location >> 8) & 0xff)) {
 	mid = (location >> 8) & 0xff;
+//printf("*%02x",mid);
 	k = mid;
-	for (i = 0; i < 8; i++) {
-	    (location & 1) ? digitalWrite(PinAddr2[i],
-					  HIGH) : digitalWrite(PinAddr2[i],
-							       LOW);
+	for (i = 0; i <= 7; i++) {
+	    (k & 1) ? digitalWrite(PinAddr2[i],
+		HIGH) : digitalWrite(PinAddr2[i], LOW);
 	    k = k >> 1;
 	}
-    }
 	digitalWrite(ADD_HIGH, HIGH);	//Latch high address lines
 	digitalWrite(ADD_HIGH, LOW);
-    if (high != ((location >> 16) & 0xff)) {
+ //   }else
+//printf(".%02x",mid);
+//    if (high != ((location >> 16) & 0xff)) {
 	high = (location >> 16) & 0xff;
+//printf("*%02x",high);
 	k = high;
-	for (i = 0; i < 8; i++) {
-	    (location & 1) ? digitalWrite(PinAddr3[i],
-					  HIGH) : digitalWrite(PinAddr3[i],
-							       LOW);
+	for (i = 0; i <= 7; i++) {
+	    (k & 1) ? digitalWrite(PinAddr3[i],
+		HIGH) : digitalWrite(PinAddr3[i], LOW);
 	    k = k >> 1;
 	}
-    }
 	digitalWrite(ADD_EXT, HIGH);	//Latch extended address lines
 	digitalWrite(ADD_EXT, LOW);
+//    }else
+//printf(".%02x ",high);
 #else
     (location & 0b1) ? digitalWrite(DATA_A0, HIGH) : digitalWrite(DATA_A0,
 								   LOW);
